@@ -14,6 +14,8 @@
               <div class="content">
                 <?php the_content(); ?>
               </div>
+
+              <?php comments_template(); ?>
             </div>
             <footer class="post_footer">
               <?php
@@ -63,6 +65,33 @@
             </footer>
           </article>
         <?php endwhile; ?>
+      <?php endif; ?>
+
+      <?php
+      $args = [
+        'post_type' => 'post', //「投稿」データを指定
+        'posts_per_page' => 3, // 3件に限定
+        'post__not_in' => [get_the_ID()], //現在表示中のページは除外する
+      ];
+      $latest_query = new WP_Query($args);
+
+      if ($latest_query->have_posts()):
+      ?>
+        <section class="latest">
+          <header class="latest_header">
+            <h2 class="heading heading-secondary">新着情報</h2>
+          </header>
+          <div class="latest_body">
+            <div class="cardList">
+              <?php while ($latest_query->have_posts()): $latest_query->the_post(); ?>
+                <?php get_template_part('template-parts/loop', 'news'); ?>
+              <?php endwhile;
+              wp_reset_postdata();
+              ?>
+            </div>
+          </div>
+        </section>
+
       <?php endif; ?>
     </div>
   </div>
