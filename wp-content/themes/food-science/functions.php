@@ -29,6 +29,7 @@ function my_document_title_separator() {
 }
 
 // プラグイン　contact-form-7有効化のとき自動整形機能をオフにする
+//問い合わせファーム作成時に自動的に<P>が追加されるのを防ぐ
 add_filter('wpcf7_autop_or_not', 'my_wpcf7_autop');
 function my_wpcf7_autop()
 {
@@ -45,29 +46,29 @@ remove_action( 'shutdown', 'wp_ob_end_flush_all', 1 );
 
 
 // ショートコードサンプル
-// ex:直近の記事だけに特定の文章を表示することもできる
-function my_shortcode_sample($args)
-{
-  // もし$argsがなかった時のデフォルト値
-  $default = [
-    'bgcolor' => 'transparent',
-  ];
-    //   第二引数が優先される
-  $args = shortcode_atts($default, $args);
+    // ex:直近の記事だけに特定の文章を表示することもできる
+    function my_shortcode_sample($args)
+    {
+      // もし$argsがなかった時のデフォルト値
+      $default = [
+        'bgcolor' => 'transparent',
+      ];
+        //   第二引数が優先される
+      $args = shortcode_atts($default, $args);
 
-  $html = <<<HTML
-    <div style="background-color: {$args['bgcolor']};">
-      <h3 class="shortcode-heading">ショートコードサンプル</h3>
-      <p>期間限定！ダミー文章、ダミー文章、ダミー文章、ダミー文章、ダミー文章、ダミー文章、ダミー文章、</p>
-    </div>
-HTML;
+          $html = <<<HTML
+            <div style="background-color: {$args['bgcolor']};">
+              <h3 class="shortcode-heading">ショートコードサンプル</h3>
+              <p>期間限定！ダミー文章、ダミー文章、ダミー文章、ダミー文章、ダミー文章、ダミー文章、ダミー文章、</p>
+            </div>
+        HTML;
 
-  return $html;
-}
-//　第一引数: ショートコード名
-// 　第二引数: 関数名（コールバック）　
-add_shortcode('my-shortcode', 'my_shortcode_sample');
-add_action('pre_get_posts', 'my_pre_get_posts');
+          return $html;
+        }
+        //　第一引数: ショートコード名
+        // 　第二引数: 関数名（コールバック）　
+        add_shortcode('my-shortcode', 'my_shortcode_sample');
+        add_action('pre_get_posts', 'my_pre_get_posts');
 
 // TOPページの投稿数を3件にする
 function my_pre_get_posts($query) {
@@ -76,8 +77,38 @@ function my_pre_get_posts($query) {
     return;
   }
   // トップページの場合
-  if($query->is_home()) {
+  if ($query->is_home()) {
     $query->set('posts_per_page', 3);
     return;
   }
+}
+
+
+/**
+ * 保護ページタイトルの「保護中」の文字を削除する
+ */
+add_filter('protected_title_format', 'my_protected_title');
+function my_protected_title()
+{
+  return '%s';
+}
+
+/**
+ * パスワード入力フォームのカスタム
+ * 問い合わせファームと同様に自動的に<P>が追加される
+ */
+
+ add_filter('the_password_form', 'my_password_form');
+function my_password_form()
+{
+  remove_filter('the_content', 'wpautop');
+  $wp_login_url = wp_login_url();
+  $html = <<<XYZ
+  <p>パスワードを入力してください。</p>
+  <form action="{$wp_login_url}?action=postpass" method="post" class="post-password-form">
+    <input type="password" name="post_password">
+    <input type="submit" name="Submit" value="送信">
+  </form>
+XYZ;
+  return $html;
 }
