@@ -81,6 +81,9 @@ function my_pre_get_posts($query) {
     $query->set('posts_per_page', 3);
     return;
   }
+
+   // タクソノミー一覧ページmenuの場合
+  // if($query->is_tax('menu')) {...}
 }
 
 

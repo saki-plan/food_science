@@ -7,11 +7,43 @@
       <p class="kv_subtitle">FROM JAPAN</p>
     </div>
 
-    <div class="kv_slider js-slider">
-      <div class="kv_sliderItem" style="background-image: url('<?= get_template_directory_uri(); ?>/assets/img/home/kv-01@2x.jpg');"></div>
-      <div class="kv_sliderItem" style="background-image: url('<?= get_template_directory_uri(); ?>/assets/img/home/kv-02@2x.jpg');"></div>
-      <div class="kv_sliderItem" style="background-image: url('<?= get_template_directory_uri(); ?>/assets/img/home/kv-03@2x.jpg');"></div>
-    </div>
+    <?php
+    $args = [
+      'post_type' => 'main-visual',
+      'posts_per_page' => -1,
+      'meta_query' => [
+        'relation' => 'OR', 
+        //ORなので、下記の条件のいずれか1つ以上に合致しているデータを取得
+        // 公開終了日が未来の場合
+        [
+          'key' => 'end_date',
+          'type' => 'DATETIME',
+          'compare' => '>',
+          'value' => date('Y-m-d H:i:s'), //現在の日時
+        ],
+        // 公開終了日が空の場合
+        [
+          'key' => 'end_date',
+          'value' => '', //compareは省略されているが、デフォルト "="
+        ],
+        // 公開終了日が存在していない場合
+        [
+          'key' => 'end_date',
+          'compare' => 'NOT EXISTS',
+        ],
+      ],
+    ];
+    $the_query = new WP_Query($args);
+    ?>
+    <?php if ($the_query->have_posts()): ?>
+      <div class="kv_slider js-slider">
+        <?php while ($the_query->have_posts()): $the_query->the_post(); ?>
+          <?php $pic = get_field('pic'); ?>
+          <div class="kv_sliderItem" style="background-image: url(<?= $pic; ?>);"></div>
+        <?php endwhile;
+        wp_reset_postdata(); ?>
+      </div>
+    <?php endif; ?>
     <div class="kv_overlay"></div>
 
     <div class="kv_scroll">
@@ -41,7 +73,7 @@
         スパイシーでヘルシーな本場の味をお楽しみ下さい。
       </p>
       <div class="section_btn">
-        <a href="<?= get_permalink(30); ?>" class="btn btn-more">もっと見る</a>
+        <a href="<?= get_permalink(28); ?>" class="btn btn-more">もっと見る</a>
       </div>
     </div>
   </div>
@@ -63,31 +95,7 @@
         <div class="cardList cardList-1row">
 
           <?php while (have_posts()): the_post(); ?>
-            <section id="post-<?php the_ID(); ?>" <?php post_class('cardList_item'); ?>>
-              <a href="<?php the_permalink(); ?>" class="card">
-                <?php
-                $categories = get_the_category();
-                if ($categories) :
-                ?>
-                  <div class="card_label">
-                    <?php foreach ($categories as $category): ?>
-                      <span class="label label-black"><?= $category->name; ?></span>
-                    <?php endforeach; ?>
-                  </div>
-                <?php endif; ?>
-                <div class="card_pic">
-                  <?php if (has_post_thumbnail()): ?>
-                    <?php the_post_thumbnail('medium'); ?>
-                  <?php else: ?>
-                    <img src="<?= get_template_directory_uri(); ?>/assets/img/common/noimage.png" alt="">
-                  <?php endif; ?>
-                </div>
-                <div class="card_body">
-                  <h2 class="card_title"><?php the_title(); ?></h2>
-                  <time datetime="<?php the_time('Y-m-d'); ?>"><?php the_time('Y年m月d日'); ?>更新</time>
-                </div>
-              </a>
-            </section>
+            <?php get_template_part('template-parts/loop', 'news'); ?>
           <?php endwhile; ?>
 
         </div>
